@@ -84,6 +84,8 @@ memFault Memory::read32(uint32_t address, uint32_t& out) const
         static_cast<uint32_t>(_data[index + 1]) << 8  |
         static_cast<uint32_t>(_data[index + 2]) << 16 |
         static_cast<uint32_t>(_data[index + 3]) << 24;
+
+  return memFault::none;
 }
 
 memFault Memory::write8(uint32_t address, uint8_t value) 
@@ -94,49 +96,49 @@ memFault Memory::write8(uint32_t address, uint8_t value)
     return memFault::outOfBounds;
   }
 
-  _data[index = value];
+  _data[index] = value;
 
   return memFault::none;
 }
 
-memFault Memory::write16(uint32_t addr, uint16_t val) 
+memFault Memory::write16(uint32_t address, uint16_t value) 
 {
-    if (addr & 0x1)
+    if (address & 0x1)
     {
       return memFault::misaligned;
     }
 
     size_t index;
 
-    if (!translate(addr, 2, index))
+    if (!translate(address, 2, index))
     {
       return memFault::outOfBounds;
     }
 
-    _data[index]     =  val       & 0xFF;
-    _data[index + 1] = (val >> 8) & 0xFF;
+    _data[index]     =  value       & 0xFF;
+    _data[index + 1] = (value >> 8) & 0xFF;
 
     return memFault::none;
 }
 
-memFault Memory::write32(uint32_t addr, uint32_t val) 
+memFault Memory::write32(uint32_t address, uint32_t value) 
 {
-    if (addr & 0x3)
+    if (address & 0x3)
     {
       return memFault::misaligned;
     }
 
     size_t index;
 
-    if (!translate(addr, 4, index))
+    if (!translate(address, 4, index))
     {
       return memFault::outOfBounds;
     }
 
-    _data[index]     =  val        & 0xFF;
-    _data[index + 1] = (val >> 8)  & 0xFF;
-    _data[index + 2] = (val >> 16) & 0xFF;
-    _data[index + 3] = (val >> 24) & 0xFF;
-    
+    _data[index]     =  value        & 0xFF;
+    _data[index + 1] = (value >> 8)  & 0xFF;
+    _data[index + 2] = (value >> 16) & 0xFF;
+    _data[index + 3] = (value >> 24) & 0xFF;
+
     return memFault::none;
 }

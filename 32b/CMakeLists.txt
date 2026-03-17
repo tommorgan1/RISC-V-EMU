@@ -4,18 +4,45 @@ project(riscv-emu)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Add library target
-add_library(riscv-emu-lib
-    src/cpu.cpp
+# ── Fetch Catch2 for unit testing ─────────────────────
+include(FetchContent)
+FetchContent_Declare(
+    Catch2
+    GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+    GIT_TAG        v3.7.1
+)
+FetchContent_MakeAvailable(Catch2)
+
+# ── Core emulator library  ────────────────────────────
+add_library(riscv-emu-lib STATIC
     src/memory.cpp
-    src/main.cpp
+    src/cpu.cpp
 )
 
-# Include directories
 target_include_directories(riscv-emu-lib PUBLIC
     inc
     inc/utils
 )
 
-# Ensure C++20 features
 target_compile_features(riscv-emu-lib PUBLIC cxx_std_20)
+
+# ── Main executable ───────────────────────────────────
+add_executable(riscv-emu
+    src/main.cpp
+)
+
+target_link_libraries(riscv-emu PRIVATE riscv-emu-lib)
+
+# ── Test executable ───────────────────────────────────
+add_executable(riscv-emu-tests
+    tests/test_memory.cpp
+)
+
+target_link_libraries(riscv-emu-tests PRIVATE
+    riscv-emu-lib
+    Catch2::Catch2WithMain   
+)
+
+include(CTest)
+include(Catch)
+catch_discover_tests(riscv-emu-tests)
