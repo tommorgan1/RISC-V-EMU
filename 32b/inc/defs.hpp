@@ -2,6 +2,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <optional>
 
 using namespace std;
 
@@ -9,23 +10,40 @@ using namespace std;
 
 constexpr uint32_t MASK32 = 0xFFFFFFFF;
 
+// Enum for different instruction types
+
+enum class InstructionType
+{
+  R,
+  I,
+  IL,
+  JALR,
+  S,
+  B,
+  U,
+  J,
+  SYS,
+  ILLEGAL
+};
+
 // Structure for decoded instructions 
 
-struct instructionField
+struct InstructionField
 {
-  string type;
+  InstructionType type;
+  uint32_t    raw;
   uint32_t    opcode;
-  uint32_t    rd;
-  uint32_t    rs1;
-  uint32_t    rs2;
-  uint32_t    funct3;
-  uint32_t    funct7;
-  uint32_t    imm;
+  std::optional<uint32_t>    rd;
+  std::optional<uint32_t>    rs1;
+  std::optional<uint32_t>    rs2;
+  std::optional<uint32_t>   funct3;
+  std::optional<uint32_t>   funct7;
+  std::optional<int32_t>   imm;
 };
 
 // Opcode map
 
-unordered_map<string, vector<uint32_t>> opcode_map
+inline unordered_map<string, vector<uint32_t>> opcode_map
 {
   {"R",    {0x33}},         // add sub and or xor sll srl sra slt sltu
   {"I",    {0x13}},         // addi andi ori xori slti sltiu slli srli srai
