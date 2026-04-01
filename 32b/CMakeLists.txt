@@ -18,6 +18,7 @@ add_library(riscv-emu-lib STATIC
     src/memory.cpp
     src/cpu.cpp
     src/decode.cpp
+    src/cpu.cpp
 )
 
 target_include_directories(riscv-emu-lib PUBLIC
@@ -38,6 +39,7 @@ target_link_libraries(riscv-emu PRIVATE riscv-emu-lib)
 add_executable(riscv-emu-tests
     tests/test_memory.cpp
     tests/test_decode.cpp
+    tests/test_cpu_execute.cpp
 )
 
 target_link_libraries(riscv-emu-tests PRIVATE

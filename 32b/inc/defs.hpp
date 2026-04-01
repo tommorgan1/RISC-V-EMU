@@ -1,10 +1,10 @@
+#pragma once
+
 #include <cstdint>
 #include <string>
 #include <unordered_map>
 #include <vector>
 #include <optional>
-
-using namespace std;
 
 // Constants
 
@@ -41,20 +41,6 @@ struct InstructionField
   std::optional<int32_t>   imm;
 };
 
-// Opcode map
-
-inline unordered_map<string, vector<uint32_t>> opcode_map
-{
-  {"R",    {0x33}},         // add sub and or xor sll srl sra slt sltu
-  {"I",    {0x13}},         // addi andi ori xori slti sltiu slli srli srai
-  {"IL",   {0x03}},         // lb lh lw lbu lhu  (I-type loads)
-  {"JALR", {0x67}},         // jalr              (I-type jump)
-  {"S",    {0x23}},         // sb sh sw
-  {"B",    {0x63}},         // beq bne blt bge bltu bgeu
-  {"U",    {0x37, 0x17}},   // lui auipc
-  {"J",    {0x6F}},         // jal
-  {"SYS",  {0x73}}          // ecall ebreak mret csrrw csrrs csrrc csrrwi csrrsi csrrci
-};
 
 // CSR registers 
 
