@@ -23,6 +23,7 @@ enum class InstructionType
   U,
   J,
   SYS,
+  FENCE,
   ILLEGAL
 };
 
@@ -36,9 +37,9 @@ struct InstructionField
   std::optional<uint32_t>    rd;
   std::optional<uint32_t>    rs1;
   std::optional<uint32_t>    rs2;
-  std::optional<uint32_t>   funct3;
-  std::optional<uint32_t>   funct7;
-  std::optional<int32_t>   imm;
+  std::optional<uint32_t>    funct3;
+  std::optional<uint32_t>    funct7;
+  std::optional<int32_t>     imm;
 };
 
 

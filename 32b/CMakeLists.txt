@@ -50,3 +50,5 @@ target_link_libraries(riscv-emu-tests PRIVATE
 include(CTest)
 include(Catch)
 catch_discover_tests(riscv-emu-tests)
+
+add_subdirectory(tests/compliance)

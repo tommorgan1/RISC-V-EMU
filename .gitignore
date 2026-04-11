@@ -1,2 +1,8 @@
+# build artifacts
 **/build/*
+
+# vscode 
 .vscode/*
+
+# external 
+**/external/*

@@ -35,10 +35,13 @@ TEST_CASE("Memory: misaligned access", "[memory]")
 {
     Memory mem(0x80000000, 0x1000);
 
-    uint16_t h;
-    uint32_t w;
-    REQUIRE(mem.read16(0x80000001, h) == memFault::misaligned);
-    REQUIRE(mem.read32(0x80000002, w) == memFault::misaligned);
+    uint16_t h = 0xFF;
+    uint32_t w = 0xFF;
+    // Unaligned data accesses are transparently supported (required for ma_data compliance).
+    REQUIRE(mem.read16(0x80000001, h) == memFault::none);
+    REQUIRE(h == 0);
+    REQUIRE(mem.read32(0x80000002, w) == memFault::none);
+    REQUIRE(w == 0);
 }
 
 TEST_CASE("Memory: load does not fit", "[memory]")

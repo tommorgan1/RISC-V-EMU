@@ -57,8 +57,6 @@ memFault Memory::read8(uint32_t address, uint8_t& out) const
 
 memFault Memory::read16(uint32_t address, uint16_t& out) const 
 {
-    if (address & 0x1)
-        return memFault::misaligned;
     size_t index;
     if (!translate(address, 2, index))
         return memFault::outOfBounds;
@@ -69,11 +67,6 @@ memFault Memory::read16(uint32_t address, uint16_t& out) const
 
 memFault Memory::read32(uint32_t address, uint32_t& out) const
 {
-  if (address & 0x03)
-  {
-    return memFault::misaligned;
-  }
-
   size_t index;
   if (!translate(address, 4, index))
   {
@@ -103,11 +96,6 @@ memFault Memory::write8(uint32_t address, uint8_t value)
 
 memFault Memory::write16(uint32_t address, uint16_t value) 
 {
-    if (address & 0x1)
-    {
-      return memFault::misaligned;
-    }
-
     size_t index;
 
     if (!translate(address, 2, index))
@@ -123,11 +111,6 @@ memFault Memory::write16(uint32_t address, uint16_t value)
 
 memFault Memory::write32(uint32_t address, uint32_t value) 
 {
-    if (address & 0x3)
-    {
-      return memFault::misaligned;
-    }
-
     size_t index;
 
     if (!translate(address, 4, index))

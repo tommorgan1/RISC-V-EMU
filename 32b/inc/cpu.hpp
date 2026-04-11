@@ -11,13 +11,26 @@ class CPU
 {
   public:
 
+    enum class stopReason
+    {
+      Halt,
+      Ecall,
+      Ebreak
+    };
+
     explicit CPU(uint32_t base = 0x80000000, size_t memSize = 0x10000);
 
     bool load(std::span<const uint8_t> data, uint32_t address);
 
     void run();
 
-    uint32_t reg(uint32_t index) const { return _regs[index]; }
+    uint32_t readReg(uint32_t address) const { return _regs[address]; }
+
+    void writeReg(uint32_t address, uint32_t value) { if (address != 0) _regs[address] = value; }
+
+    std::optional<uint32_t> peekWord(uint32_t addr) const;
+
+    std::optional<stopReason> step();
 
   private:
 

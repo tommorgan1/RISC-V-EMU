@@ -26,7 +26,7 @@ class Memory
 
     // Reads
     // Value returned with the out parameter, fault through return value
-    memFault read8  (uint32_t address, uint8_t& out) const;
+    memFault read8  (uint32_t address, uint8_t& out)  const;
     memFault read16 (uint32_t address, uint16_t& out) const;
     memFault read32 (uint32_t address, uint32_t& out) const;
 
