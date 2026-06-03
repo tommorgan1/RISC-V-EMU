@@ -8,14 +8,14 @@
 
 // Asserts an optional has a value and returns it
 template <typename T>
-T require_value (const std::optional<T>& opt, const char* name)
+T require_value(const std::optional<T> &opt, const char *name)
 {
-	INFO ("Expected " << name << " to have a value but it was nullopt");
-	REQUIRE (opt.has_value ());
+	INFO("Expected " << name << " to have a value but it was nullopt");
+	REQUIRE(opt.has_value());
 	return *opt;
 }
 
-#define FIELD(opt) require_value ((opt), #opt)
+#define FIELD(opt) require_value((opt), #opt)
 
 // -------------------------------------------------------------------------
 // R-type: ADD x1, x2, x3
@@ -34,19 +34,19 @@ T require_value (const std::optional<T>& opt, const char* name)
 //   = 0x00310033
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: R-type ADD x1, x2, x3", "[decode][R]")
+TEST_CASE("Decoder: R-type ADD x1, x2, x3", "[decode][R]")
 {
-	auto field = decode::decode (0x003100B3);
+	auto field = decode::decode(0x003100B3);
 
-	REQUIRE (field.type == InstructionType::R);
-	REQUIRE (field.raw == 0x003100B3);
-	REQUIRE (field.opcode == 0x33);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.rs1) == 2);
-	REQUIRE (FIELD (field.rs2) == 3);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.funct7) == 0x00);
-	REQUIRE_FALSE (field.imm.has_value ());
+	REQUIRE(field.type == InstructionType::R);
+	REQUIRE(field.raw == 0x003100B3);
+	REQUIRE(field.opcode == 0x33);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.rs1) == 2);
+	REQUIRE(FIELD(field.rs2) == 3);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.funct7) == 0x00);
+	REQUIRE_FALSE(field.imm.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -65,16 +65,16 @@ TEST_CASE ("Decoder: R-type ADD x1, x2, x3", "[decode][R]")
 //   = 0x40628233
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: R-type SUB x4, x5, x6", "[decode][R]")
+TEST_CASE("Decoder: R-type SUB x4, x5, x6", "[decode][R]")
 {
-	auto field = decode::decode (0x40628233);
+	auto field = decode::decode(0x40628233);
 
-	REQUIRE (field.type == InstructionType::R);
-	REQUIRE (FIELD (field.rd) == 4);
-	REQUIRE (FIELD (field.rs1) == 5);
-	REQUIRE (FIELD (field.rs2) == 6);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.funct7) == 0x20);
+	REQUIRE(field.type == InstructionType::R);
+	REQUIRE(FIELD(field.rd) == 4);
+	REQUIRE(FIELD(field.rs1) == 5);
+	REQUIRE(FIELD(field.rs2) == 6);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.funct7) == 0x20);
 }
 
 // -------------------------------------------------------------------------
@@ -92,17 +92,17 @@ TEST_CASE ("Decoder: R-type SUB x4, x5, x6", "[decode][R]")
 //   = 0xFFC10093
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: I-type ADDI x1, x2, -4", "[decode][I]")
+TEST_CASE("Decoder: I-type ADDI x1, x2, -4", "[decode][I]")
 {
-	auto field = decode::decode (0xFFC10093);
+	auto field = decode::decode(0xFFC10093);
 
-	REQUIRE (field.type == InstructionType::I);
-	REQUIRE (field.opcode == 0x13);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.rs1) == 2);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.imm) == -4);
-	REQUIRE_FALSE (field.rs2.has_value ());
+	REQUIRE(field.type == InstructionType::I);
+	REQUIRE(field.opcode == 0x13);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.rs1) == 2);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.imm) == -4);
+	REQUIRE_FALSE(field.rs2.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -112,14 +112,14 @@ TEST_CASE ("Decoder: I-type ADDI x1, x2, -4", "[decode][I]")
 //   = 0x00000013
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: I-type NOP (ADDI x0, x0, 0)", "[decode][I]")
+TEST_CASE("Decoder: I-type NOP (ADDI x0, x0, 0)", "[decode][I]")
 {
-	auto field = decode::decode (0x00000013);
+	auto field = decode::decode(0x00000013);
 
-	REQUIRE (field.type == InstructionType::I);
-	REQUIRE (FIELD (field.rd) == 0);
-	REQUIRE (FIELD (field.rs1) == 0);
-	REQUIRE (FIELD (field.imm) == 0);
+	REQUIRE(field.type == InstructionType::I);
+	REQUIRE(FIELD(field.rd) == 0);
+	REQUIRE(FIELD(field.rs1) == 0);
+	REQUIRE(FIELD(field.imm) == 0);
 }
 
 // -------------------------------------------------------------------------
@@ -137,18 +137,18 @@ TEST_CASE ("Decoder: I-type NOP (ADDI x0, x0, 0)", "[decode][I]")
 //   = 0xFF812083
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: IL-type LW x1, -8(x2)", "[decode][IL]")
+TEST_CASE("Decoder: IL-type LW x1, -8(x2)", "[decode][IL]")
 {
-	auto field = decode::decode (0xFF812083);
+	auto field = decode::decode(0xFF812083);
 
-	REQUIRE (field.type == InstructionType::IL);
-	REQUIRE (field.opcode == 0x03);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.rs1) == 2);
-	REQUIRE (FIELD (field.funct3) == 0x2);
-	REQUIRE (FIELD (field.imm) == -8);
-	REQUIRE_FALSE (field.rs2.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::IL);
+	REQUIRE(field.opcode == 0x03);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.rs1) == 2);
+	REQUIRE(FIELD(field.funct3) == 0x2);
+	REQUIRE(FIELD(field.imm) == -8);
+	REQUIRE_FALSE(field.rs2.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -171,18 +171,18 @@ TEST_CASE ("Decoder: IL-type LW x1, -8(x2)", "[decode][IL]")
 //   = 0xFE312C23
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: S-type SW x3, -8(x2)", "[decode][S]")
+TEST_CASE("Decoder: S-type SW x3, -8(x2)", "[decode][S]")
 {
-	auto field = decode::decode (0xFE312C23);
+	auto field = decode::decode(0xFE312C23);
 
-	REQUIRE (field.type == InstructionType::S);
-	REQUIRE (field.opcode == 0x23);
-	REQUIRE (FIELD (field.rs1) == 2);
-	REQUIRE (FIELD (field.rs2) == 3);
-	REQUIRE (FIELD (field.funct3) == 0x2);
-	REQUIRE (FIELD (field.imm) == -8);
-	REQUIRE_FALSE (field.rd.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::S);
+	REQUIRE(field.opcode == 0x23);
+	REQUIRE(FIELD(field.rs1) == 2);
+	REQUIRE(FIELD(field.rs2) == 3);
+	REQUIRE(FIELD(field.funct3) == 0x2);
+	REQUIRE(FIELD(field.imm) == -8);
+	REQUIRE_FALSE(field.rd.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -210,18 +210,18 @@ TEST_CASE ("Decoder: S-type SW x3, -8(x2)", "[decode][S]")
 //   = 0x00208463
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: B-type BEQ x1, x2, +8", "[decode][B]")
+TEST_CASE("Decoder: B-type BEQ x1, x2, +8", "[decode][B]")
 {
-	auto field = decode::decode (0x00208463);
+	auto field = decode::decode(0x00208463);
 
-	REQUIRE (field.type == InstructionType::B);
-	REQUIRE (field.opcode == 0x63);
-	REQUIRE (FIELD (field.rs1) == 1);
-	REQUIRE (FIELD (field.rs2) == 2);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.imm) == 8);
-	REQUIRE_FALSE (field.rd.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::B);
+	REQUIRE(field.opcode == 0x63);
+	REQUIRE(FIELD(field.rs1) == 1);
+	REQUIRE(FIELD(field.rs2) == 2);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.imm) == 8);
+	REQUIRE_FALSE(field.rd.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -237,18 +237,18 @@ TEST_CASE ("Decoder: B-type BEQ x1, x2, +8", "[decode][B]")
 //   = 0x123450B7
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: U-type LUI x1, 0x12345", "[decode][U]")
+TEST_CASE("Decoder: U-type LUI x1, 0x12345", "[decode][U]")
 {
-	auto field = decode::decode (0x123450B7);
+	auto field = decode::decode(0x123450B7);
 
-	REQUIRE (field.type == InstructionType::U);
-	REQUIRE (field.opcode == 0x37);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.imm) == static_cast<int32_t> (0x12345000));
-	REQUIRE_FALSE (field.rs1.has_value ());
-	REQUIRE_FALSE (field.rs2.has_value ());
-	REQUIRE_FALSE (field.funct3.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::U);
+	REQUIRE(field.opcode == 0x37);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.imm) == static_cast<int32_t>(0x12345000));
+	REQUIRE_FALSE(field.rs1.has_value());
+	REQUIRE_FALSE(field.rs2.has_value());
+	REQUIRE_FALSE(field.funct3.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -274,18 +274,18 @@ TEST_CASE ("Decoder: U-type LUI x1, 0x12345", "[decode][U]")
 //   = 0x010000EF
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: J-type JAL x1, +16", "[decode][J]")
+TEST_CASE("Decoder: J-type JAL x1, +16", "[decode][J]")
 {
-	auto field = decode::decode (0x010000EF);
+	auto field = decode::decode(0x010000EF);
 
-	REQUIRE (field.type == InstructionType::J);
-	REQUIRE (field.opcode == 0x6F);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.imm) == 16);
-	REQUIRE_FALSE (field.rs1.has_value ());
-	REQUIRE_FALSE (field.rs2.has_value ());
-	REQUIRE_FALSE (field.funct3.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::J);
+	REQUIRE(field.opcode == 0x6F);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.imm) == 16);
+	REQUIRE_FALSE(field.rs1.has_value());
+	REQUIRE_FALSE(field.rs2.has_value());
+	REQUIRE_FALSE(field.funct3.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -303,18 +303,18 @@ TEST_CASE ("Decoder: J-type JAL x1, +16", "[decode][J]")
 //   = 0x00410067
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: JALR x1, x2, 4", "[decode][JALR]")
+TEST_CASE("Decoder: JALR x1, x2, 4", "[decode][JALR]")
 {
-	auto field = decode::decode (0x004100E7);
+	auto field = decode::decode(0x004100E7);
 
-	REQUIRE (field.type == InstructionType::JALR);
-	REQUIRE (field.opcode == 0x67);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.rs1) == 2);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.imm) == 4);
-	REQUIRE_FALSE (field.rs2.has_value ());
-	REQUIRE_FALSE (field.funct7.has_value ());
+	REQUIRE(field.type == InstructionType::JALR);
+	REQUIRE(field.opcode == 0x67);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.rs1) == 2);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.imm) == 4);
+	REQUIRE_FALSE(field.rs2.has_value());
+	REQUIRE_FALSE(field.funct7.has_value());
 }
 
 // -------------------------------------------------------------------------
@@ -324,16 +324,16 @@ TEST_CASE ("Decoder: JALR x1, x2, 4", "[decode][JALR]")
 //   = 0x00000073
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: SYS ECALL", "[decode][SYS]")
+TEST_CASE("Decoder: SYS ECALL", "[decode][SYS]")
 {
-	auto field = decode::decode (0x00000073);
+	auto field = decode::decode(0x00000073);
 
-	REQUIRE (field.type == InstructionType::SYS);
-	REQUIRE (field.opcode == 0x73);
-	REQUIRE (FIELD (field.rd) == 0);
-	REQUIRE (FIELD (field.rs1) == 0);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.imm) == 0x000);  // ECALL code, not sign-extended
+	REQUIRE(field.type == InstructionType::SYS);
+	REQUIRE(field.opcode == 0x73);
+	REQUIRE(FIELD(field.rd) == 0);
+	REQUIRE(FIELD(field.rs1) == 0);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.imm) == 0x000);  // ECALL code, not sign-extended
 }
 
 // -------------------------------------------------------------------------
@@ -357,36 +357,36 @@ TEST_CASE ("Decoder: SYS ECALL", "[decode][SYS]")
 //   = 0xF14020F3
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: SYS CSRRS x1, mhartid, x0", "[decode][SYS]")
+TEST_CASE("Decoder: SYS CSRRS x1, mhartid, x0", "[decode][SYS]")
 {
 	// csr=0xF14 (mhartid), rs1=x0, funct3=2 (CSRRS), rd=x1
-	auto field = decode::decode (0xF14020F3);
+	auto field = decode::decode(0xF14020F3);
 
-	REQUIRE (field.type == InstructionType::SYS);
-	REQUIRE (FIELD (field.rd) == 1);
-	REQUIRE (FIELD (field.rs1) == 0);
-	REQUIRE (FIELD (field.funct3) == 0x2);
-	REQUIRE (FIELD (field.imm) == 0xF14);  // raw CSR address — not sign-extended
+	REQUIRE(field.type == InstructionType::SYS);
+	REQUIRE(FIELD(field.rd) == 1);
+	REQUIRE(FIELD(field.rs1) == 0);
+	REQUIRE(FIELD(field.funct3) == 0x2);
+	REQUIRE(FIELD(field.imm) == 0xF14);  // raw CSR address — not sign-extended
 }
 
 // -------------------------------------------------------------------------
 // ILLEGAL: unknown opcode 0x02
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: ILLEGAL unknown opcode", "[decode][ILLEGAL]")
+TEST_CASE("Decoder: ILLEGAL unknown opcode", "[decode][ILLEGAL]")
 {
 	uint32_t bad   = 0x00000002;  // opcode 0x02 — not a valid RISC-V opcode
-	auto     field = decode::decode (bad);
+	auto     field = decode::decode(bad);
 
-	REQUIRE (field.type == InstructionType::ILLEGAL);
-	REQUIRE (field.raw == bad);  // raw preserved so CPU can write it to MTVAL
+	REQUIRE(field.type == InstructionType::ILLEGAL);
+	REQUIRE(field.raw == bad);  // raw preserved so CPU can write it to MTVAL
 }
 
 // -------------------------------------------------------------------------
 // ILLEGAL: B-type sign extend
 // -------------------------------------------------------------------------
 
-TEST_CASE ("Decoder: B-type BEQ x1, x2, -8", "[decoder][B]")
+TEST_CASE("Decoder: B-type BEQ x1, x2, -8", "[decoder][B]")
 {
 	// beq  rs1=x1  rs2=x2  imm=-8  funct3=0x0
 	// -8 in 13-bit two's complement = 1_1111_1111_1000
@@ -397,11 +397,11 @@ TEST_CASE ("Decoder: B-type BEQ x1, x2, -8", "[decoder][B]")
 	//
 	//   1_111111_00010_00001_000_1100_1_1100011
 	//   = 0xFE208CE3
-	auto field = decode::decode (0xFE208CE3);
+	auto field = decode::decode(0xFE208CE3);
 
-	REQUIRE (field.type == InstructionType::B);
-	REQUIRE (FIELD (field.rs1) == 1);
-	REQUIRE (FIELD (field.rs2) == 2);
-	REQUIRE (FIELD (field.funct3) == 0x0);
-	REQUIRE (FIELD (field.imm) == -8);
+	REQUIRE(field.type == InstructionType::B);
+	REQUIRE(FIELD(field.rs1) == 1);
+	REQUIRE(FIELD(field.rs2) == 2);
+	REQUIRE(FIELD(field.funct3) == 0x0);
+	REQUIRE(FIELD(field.imm) == -8);
 }

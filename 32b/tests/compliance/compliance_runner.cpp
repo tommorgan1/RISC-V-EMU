@@ -71,59 +71,91 @@ struct TestImage
 	uint32_t             tohost_addr = 0;
 };
 
-static bool parse_elf (const std::string& path, TestImage& img)
+static bool parse_elf(const std::string &path, TestImage &img)
 {
-	std::ifstream f (path, std::ios::binary);
-	if (!f) return false;
+	std::ifstream f(path, std::ios::binary);
+	if (!f)
+	{
+		return false;
+	}
 
-	std::vector<uint8_t> raw (std::istreambuf_iterator<char> (f), {});
+	std::vector<uint8_t> raw(std::istreambuf_iterator<char>(f), {});
 
-	if (raw.size () < sizeof (Elf32_Ehdr)) return false;
-	const auto* eh = reinterpret_cast<const Elf32_Ehdr*> (raw.data ());
+	if (raw.size() < sizeof(Elf32_Ehdr))
+	{
+		return false;
+	}
+	const auto *eh = reinterpret_cast<const Elf32_Ehdr *>(raw.data());
 
 	if (eh->e_ident[0] != ELFMAG0 || eh->e_ident[1] != ELFMAG1 || eh->e_ident[2] != ELFMAG2 ||
 	    eh->e_ident[3] != ELFMAG3)
+	{
 		return false;
-	if (eh->e_ident[4] != ELFCLASS32) return false;
-	if (eh->e_ident[5] != ELFDATA2LSB) return false;
-	if (eh->e_machine != EM_RISCV) return false;
+	}
+	if (eh->e_ident[4] != ELFCLASS32)
+	{
+		return false;
+	}
+	if (eh->e_ident[5] != ELFDATA2LSB)
+	{
+		return false;
+	}
+	if (eh->e_machine != EM_RISCV)
+	{
+		return false;
+	}
 
 	// Determine memory footprint from PT_LOAD segments
 	uint32_t    lo = UINT32_MAX, hi = 0;
-	const auto* ph = reinterpret_cast<const Elf32_Phdr*> (raw.data () + eh->e_phoff);
+	const auto *ph = reinterpret_cast<const Elf32_Phdr *>(raw.data() + eh->e_phoff);
 	for (int i = 0; i < eh->e_phnum; ++i)
 	{
-		if (ph[i].p_type != PT_LOAD) continue;
-		lo = std::min (lo, ph[i].p_vaddr);
-		hi = std::max (hi, ph[i].p_vaddr + ph[i].p_memsz);
+		if (ph[i].p_type != PT_LOAD)
+		{
+			continue;
+		}
+		lo = std::min(lo, ph[i].p_vaddr);
+		hi = std::max(hi, ph[i].p_vaddr + ph[i].p_memsz);
 	}
-	if (lo == UINT32_MAX) return false;
+	if (lo == UINT32_MAX)
+	{
+		return false;
+	}
 
 	img.mem_base = lo;
 	img.mem_size = (hi - lo + 0xFFFu) & ~0xFFFu;
-	img.data.assign (img.mem_size, 0);
+	img.data.assign(img.mem_size, 0);
 
 	for (int i = 0; i < eh->e_phnum; ++i)
 	{
-		if (ph[i].p_type != PT_LOAD) continue;
+		if (ph[i].p_type != PT_LOAD)
+		{
+			continue;
+		}
 		uint32_t dst = ph[i].p_vaddr - lo;
-		if (dst + ph[i].p_filesz > img.data.size ()) continue;
-		memcpy (img.data.data () + dst, raw.data () + ph[i].p_offset, ph[i].p_filesz);
+		if (dst + ph[i].p_filesz > img.data.size())
+		{
+			continue;
+		}
+		memcpy(img.data.data() + dst, raw.data() + ph[i].p_offset, ph[i].p_filesz);
 	}
 
 	// Locate tohost symbol in .symtab
-	const auto* sh = reinterpret_cast<const Elf32_Shdr*> (raw.data () + eh->e_shoff);
+	const auto *sh = reinterpret_cast<const Elf32_Shdr *>(raw.data() + eh->e_shoff);
 	for (int i = 0; i < eh->e_shnum; ++i)
 	{
-		if (sh[i].sh_type != SHT_SYMTAB) continue;
+		if (sh[i].sh_type != SHT_SYMTAB)
+		{
+			continue;
+		}
 
-		const auto* syms   = reinterpret_cast<const Elf32_Sym*> (raw.data () + sh[i].sh_offset);
-		const char* strtab = reinterpret_cast<const char*> (raw.data () + sh[sh[i].sh_link].sh_offset);
-		int         nsyms  = static_cast<int> (sh[i].sh_size / sizeof (Elf32_Sym));
+		const auto *syms   = reinterpret_cast<const Elf32_Sym *>(raw.data() + sh[i].sh_offset);
+		const char *strtab = reinterpret_cast<const char *>(raw.data() + sh[sh[i].sh_link].sh_offset);
+		int         nsyms  = static_cast<int>(sh[i].sh_size / sizeof(Elf32_Sym));
 
 		for (int j = 0; j < nsyms; ++j)
 		{
-			if (std::strcmp (strtab + syms[j].st_name, "tohost") == 0)
+			if (std::strcmp(strtab + syms[j].st_name, "tohost") == 0)
 			{
 				img.tohost_addr = syms[j].st_value;
 				break;
@@ -142,12 +174,12 @@ static bool parse_elf (const std::string& path, TestImage& img)
 static constexpr uint32_t MAX_STEPS     = 10'000'000;
 static constexpr uint32_t POLL_INTERVAL = 128;
 
-static bool run_test (const std::string& path)
+static bool run_test(const std::string &path)
 {
 	TestImage   img;
-	std::string name = std::filesystem::path (path).stem ().string ();
+	std::string name = std::filesystem::path(path).stem().string();
 
-	if (!parse_elf (path, img))
+	if (!parse_elf(path, img))
 	{
 		std::cout << "[ERROR ] " << name << "  (ELF parse failed)\n";
 		return false;
@@ -158,29 +190,32 @@ static bool run_test (const std::string& path)
 		return false;
 	}
 
-	CPU cpu (img.mem_base, img.mem_size);
-	cpu.load (img.data, img.mem_base);
+	CPU cpu(img.mem_base, img.mem_size);
+	cpu.load(img.data, img.mem_base);
 
 	std::string crash_reason;
 	for (uint32_t n = 0; n < MAX_STEPS; ++n)
 	{
 		if ((n & (POLL_INTERVAL - 1)) == 0)
 		{
-			auto val = cpu.peekWord (img.tohost_addr);
-			if (val && *val != 0) break;
+			auto val = cpu.peekWord(img.tohost_addr);
+			if (val && *val != 0)
+			{
+				break;
+			}
 		}
 		try
 		{
-			cpu.step ();
+			cpu.step();
 		}
-		catch (const std::exception& e)
+		catch (const std::exception &e)
 		{
-			crash_reason = e.what ();
+			crash_reason = e.what();
 			break;
 		}
 	}
 
-	auto tohost = cpu.peekWord (img.tohost_addr);
+	auto tohost = cpu.peekWord(img.tohost_addr);
 	bool passed = (tohost && *tohost == 1);
 
 	if (passed)
@@ -189,11 +224,11 @@ static bool run_test (const std::string& path)
 	}
 	else
 	{
-		if (!crash_reason.empty ())
+		if (!crash_reason.empty())
 		{
 			std::cout << "         crash: " << crash_reason << "\n";
 		}
-		uint32_t code    = tohost.value_or (0);
+		uint32_t code    = tohost.value_or(0);
 		uint32_t testnum = code >> 1;
 		std::cout << "[FAIL  ] " << name << "  (tohost=0x" << std::hex << code << std::dec
 		          << ", failing case " << testnum << ")\n";
@@ -201,7 +236,7 @@ static bool run_test (const std::string& path)
 	return passed;
 }
 
-int main (int argc, char** argv)
+int main(int argc, char **argv)
 {
 	if (argc < 2)
 	{
@@ -212,10 +247,14 @@ int main (int argc, char** argv)
 	int passed = 0, failed = 0;
 	for (int i = 1; i < argc; ++i)
 	{
-		if (run_test (argv[i]))
+		if (run_test(argv[i]))
+		{
 			++passed;
+		}
 		else
+		{
 			++failed;
+		}
 	}
 
 	std::cout << "\n"
