@@ -35,14 +35,14 @@ static CPU run_one(uint32_t instruction)
 // Run until ECALL.  Re-throws any exception that is NOT "ECALL", so real
 // faults (illegal instruction, memory fault, etc.) are never silently
 // swallowed.
-static void run_to_ecall(CPU &cpu)
+static void run_to_ecall(CPU& cpu)
 {
 	try
 	{
 		cpu.run();
 		FAIL("Expected ECALL halt but CPU ran off the end of the program");
 	}
-	catch (const std::runtime_error &e)
+	catch (const std::runtime_error& e)
 	{
 		if (std::string(e.what()) != "ECALL")
 		{
@@ -396,7 +396,7 @@ TEST_CASE("Execute SYS: ECALL", "[cpu][SYS]")
 		cpu.run();
 		FAIL("Expected ECALL throw");
 	}
-	catch (const std::runtime_error &e)
+	catch (const std::runtime_error& e)
 	{
 		REQUIRE(std::string(e.what()) == "ECALL");
 	}
@@ -413,7 +413,7 @@ TEST_CASE("Execute SYS: EBREAK", "[cpu][SYS]")
 		cpu.run();
 		FAIL("Expected EBREAK throw");
 	}
-	catch (const std::runtime_error &e)
+	catch (const std::runtime_error& e)
 	{
 		REQUIRE(std::string(e.what()) == "EBREAK");
 	}

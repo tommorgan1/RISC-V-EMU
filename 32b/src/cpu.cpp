@@ -42,7 +42,7 @@ uint32_t CPU::fetch()
 	return instruction;
 }
 
-uint32_t CPU::readCSR(uint32_t address) const
+uint32_t CPU::read_CSR(uint32_t address) const
 {
 	auto it = _csrs.find(address);
 	if (it == _csrs.end())
@@ -52,7 +52,7 @@ uint32_t CPU::readCSR(uint32_t address) const
 	return it->second;
 }
 
-void CPU::writeCSR(uint32_t address, uint32_t value)
+void CPU::write_CSR(uint32_t address, uint32_t value)
 {
 	_csrs[address] = value;
 }
@@ -62,12 +62,21 @@ std::optional<CPU::stopReason> CPU::step()
 	uint32_t         instruction = fetch();
 	InstructionField field       = decode::decode(instruction);
 	execute(field);
+	++_instruction_count;
 	return std::nullopt;
 }
 
 void CPU::run()
 {
 	while (true)
+	{
+		step();
+	}
+}
+
+void CPU::run_until_halt()
+{
+	while (!_halted)
 	{
 		step();
 	}
@@ -83,7 +92,7 @@ std::optional<uint32_t> CPU::peekWord(uint32_t address) const
 	return value;
 }
 
-void CPU::execute(const InstructionField &field)
+void CPU::execute(const InstructionField& field)
 {
 	uint32_t currentPC = _pc - 4;
 
@@ -125,7 +134,7 @@ void CPU::execute(const InstructionField &field)
 	}
 }
 
-void CPU::execute_R(const InstructionField &field)
+void CPU::execute_R(const InstructionField& field)
 {
 	uint32_t rs1    = readReg(field.rs1.value());
 	uint32_t rs2    = readReg(field.rs2.value());
@@ -172,7 +181,7 @@ void CPU::execute_R(const InstructionField &field)
 	writeReg(field.rd.value(), result);
 }
 
-void CPU::execute_I(const InstructionField &field)
+void CPU::execute_I(const InstructionField& field)
 {
 	uint32_t rs1    = readReg(field.rs1.value());
 	int32_t  imm    = field.imm.value();
@@ -225,7 +234,7 @@ void CPU::execute_I(const InstructionField &field)
 	writeReg(field.rd.value(), result);
 }
 
-void CPU::execute_IL(const InstructionField &field)
+void CPU::execute_IL(const InstructionField& field)
 {
 	uint32_t addr =
 	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
@@ -288,11 +297,18 @@ void CPU::execute_IL(const InstructionField &field)
 	writeReg(field.rd.value(), result);
 }
 
-void CPU::execute_S(const InstructionField &field)
+void CPU::execute_S(const InstructionField& field)
 {
 	uint32_t addr =
 	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
 	uint32_t src = readReg(field.rs2.value());
+
+	if (addr == HALT_ADDR)
+	{
+		_halted = true;
+		return;
+	}
+
 	memFault f   = memFault::none;
 
 	switch (field.funct3.value())
@@ -316,7 +332,7 @@ void CPU::execute_S(const InstructionField &field)
 	}
 }
 
-void CPU::execute_B(const InstructionField &field, uint32_t current_pc)
+void CPU::execute_B(const InstructionField& field, uint32_t current_pc)
 {
 	uint32_t rs1   = readReg(field.rs1.value());
 	uint32_t rs2   = readReg(field.rs2.value());
@@ -353,7 +369,7 @@ void CPU::execute_B(const InstructionField &field, uint32_t current_pc)
 	}
 }
 
-void CPU::execute_U(const InstructionField &field, uint32_t current_pc)
+void CPU::execute_U(const InstructionField& field, uint32_t current_pc)
 {
 	uint32_t imm = static_cast<uint32_t>(field.imm.value());
 
@@ -370,14 +386,14 @@ void CPU::execute_U(const InstructionField &field, uint32_t current_pc)
 	}
 }
 
-void CPU::execute_J(const InstructionField &field, uint32_t current_pc)
+void CPU::execute_J(const InstructionField& field, uint32_t current_pc)
 {
 	writeReg(field.rd.value(), (current_pc + 4));  // JAL — save return address
 	_pc = static_cast<uint32_t>(static_cast<int32_t>(current_pc) +
 	                            field.imm.value());  // JAL — jump to target
 }
 
-void CPU::execute_JALR(const InstructionField &field, uint32_t current_pc)
+void CPU::execute_JALR(const InstructionField& field, uint32_t current_pc)
 {
 	uint32_t target =
 	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
@@ -385,7 +401,7 @@ void CPU::execute_JALR(const InstructionField &field, uint32_t current_pc)
 	_pc = (target & ~1u);                          // JALR — jump to target, clear LSB
 }
 
-void CPU::execute_SYS(const InstructionField &field)
+void CPU::execute_SYS(const InstructionField& field)
 {
 	uint32_t csr  = static_cast<uint32_t>(field.imm.value());
 	uint32_t rs1v = readReg(field.rs1.value());
@@ -396,12 +412,12 @@ void CPU::execute_SYS(const InstructionField &field)
 		case 0x0:  // ECALL / EBREAK / MRET / WFI
 			if (csr == 0x000)
 			{
-				uint32_t mtvec = readCSR(MTVEC);
+				uint32_t mtvec = read_CSR(MTVEC);
 				if (mtvec != 0)
 				{
-					writeCSR(MEPC, _pc - 4);  // ECALL — save PC of ecall instruction
-					writeCSR(MCAUSE, 11);     // ECALL — environment call from M-mode
-					writeCSR(MTVAL, 0);
+					write_CSR(MEPC, _pc - 4);  // ECALL — save PC of ecall instruction
+					write_CSR(MCAUSE, 11);     // ECALL — environment call from M-mode
+					write_CSR(MTVAL, 0);
 					_pc = mtvec & ~3u;  // ECALL — jump to trap handler (direct mode)
 				}
 				else
@@ -411,12 +427,12 @@ void CPU::execute_SYS(const InstructionField &field)
 			}
 			else if (csr == 0x001)
 			{
-				uint32_t mtvec = readCSR(MTVEC);
+				uint32_t mtvec = read_CSR(MTVEC);
 				if (mtvec != 0)
 				{
-					writeCSR(MEPC, _pc - 4);  // EBREAK — save PC of ebreak instruction
-					writeCSR(MCAUSE, 3);      // EBREAK — breakpoint cause
-					writeCSR(MTVAL, 0);
+					write_CSR(MEPC, _pc - 4);  // EBREAK — save PC of ebreak instruction
+					write_CSR(MCAUSE, 3);      // EBREAK — breakpoint cause
+					write_CSR(MTVAL, 0);
 					_pc = mtvec & ~3u;  // EBREAK — jump to trap handler (direct mode)
 				}
 				else
@@ -426,7 +442,7 @@ void CPU::execute_SYS(const InstructionField &field)
 			}
 			else if (csr == 0x302)
 			{
-				_pc = readCSR(0x341);  // MRET — return from machine-mode trap, restore PC from MEPC
+				_pc = read_CSR(0x341);  // MRET — return from machine-mode trap, restore PC from MEPC
 			}
 			else if (csr == 0x105)
 			{
@@ -440,54 +456,54 @@ void CPU::execute_SYS(const InstructionField &field)
 
 		case 0x1:
 		{
-			uint32_t old = readCSR(csr);
-			writeCSR(csr, rs1v);              // CSRRW — write rs1 to CSR
+			uint32_t old = read_CSR(csr);
+			write_CSR(csr, rs1v);              // CSRRW — write rs1 to CSR
 			writeReg(field.rd.value(), old);  // CSRRW — return old CSR value
 			break;
 		}
 		case 0x2:
 		{
-			uint32_t old = readCSR(csr);
+			uint32_t old = read_CSR(csr);
 			if (rs1v != 0)
 			{
-				writeCSR(csr, old | rs1v);  // CSRRS — set bits in CSR
+				write_CSR(csr, old | rs1v);  // CSRRS — set bits in CSR
 			}
 			writeReg(field.rd.value(), old);  // CSRRS — return old CSR value
 			break;
 		}
 		case 0x3:
 		{
-			uint32_t old = readCSR(csr);
+			uint32_t old = read_CSR(csr);
 			if (rs1v != 0)
 			{
-				writeCSR(csr, old & ~rs1v);  // CSRRC — clear bits in CSR
+				write_CSR(csr, old & ~rs1v);  // CSRRC — clear bits in CSR
 			}
 			writeReg(field.rd.value(), old);  // CSRRC — return old CSR value
 			break;
 		}
 		case 0x5:
 		{
-			uint32_t old = readCSR(csr);
-			writeCSR(csr, zimm);              // CSRRWI — write uimm to CSR
+			uint32_t old = read_CSR(csr);
+			write_CSR(csr, zimm);              // CSRRWI — write uimm to CSR
 			writeReg(field.rd.value(), old);  // CSRRWI — return old CSR value
 			break;
 		}
 		case 0x6:
 		{
-			uint32_t old = readCSR(csr);
+			uint32_t old = read_CSR(csr);
 			if (zimm != 0)
 			{
-				writeCSR(csr, old | zimm);  // CSRRSI — set bits in CSR using uimm
+				write_CSR(csr, old | zimm);  // CSRRSI — set bits in CSR using uimm
 			}
 			writeReg(field.rd.value(), old);  // CSRRSI — return old CSR value
 			break;
 		}
 		case 0x7:
 		{
-			uint32_t old = readCSR(csr);
+			uint32_t old = read_CSR(csr);
 			if (zimm != 0)
 			{
-				writeCSR(csr, old & ~zimm);  // CSRRCI — clear bits in CSR using uimm
+				write_CSR(csr, old & ~zimm);  // CSRRCI — clear bits in CSR using uimm
 			}
 			writeReg(field.rd.value(), old);  // CSRRCI — return old CSR value
 			break;

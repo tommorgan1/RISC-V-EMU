@@ -71,7 +71,7 @@ struct TestImage
 	uint32_t             tohost_addr = 0;
 };
 
-static bool parse_elf(const std::string &path, TestImage &img)
+static bool parse_elf(const std::string& path, TestImage& img)
 {
 	std::ifstream f(path, std::ios::binary);
 	if (!f)
@@ -85,7 +85,7 @@ static bool parse_elf(const std::string &path, TestImage &img)
 	{
 		return false;
 	}
-	const auto *eh = reinterpret_cast<const Elf32_Ehdr *>(raw.data());
+	const auto* eh = reinterpret_cast<const Elf32_Ehdr*>(raw.data());
 
 	if (eh->e_ident[0] != ELFMAG0 || eh->e_ident[1] != ELFMAG1 || eh->e_ident[2] != ELFMAG2 ||
 	    eh->e_ident[3] != ELFMAG3)
@@ -107,7 +107,7 @@ static bool parse_elf(const std::string &path, TestImage &img)
 
 	// Determine memory footprint from PT_LOAD segments
 	uint32_t    lo = UINT32_MAX, hi = 0;
-	const auto *ph = reinterpret_cast<const Elf32_Phdr *>(raw.data() + eh->e_phoff);
+	const auto* ph = reinterpret_cast<const Elf32_Phdr*>(raw.data() + eh->e_phoff);
 	for (int i = 0; i < eh->e_phnum; ++i)
 	{
 		if (ph[i].p_type != PT_LOAD)
@@ -141,7 +141,7 @@ static bool parse_elf(const std::string &path, TestImage &img)
 	}
 
 	// Locate tohost symbol in .symtab
-	const auto *sh = reinterpret_cast<const Elf32_Shdr *>(raw.data() + eh->e_shoff);
+	const auto* sh = reinterpret_cast<const Elf32_Shdr*>(raw.data() + eh->e_shoff);
 	for (int i = 0; i < eh->e_shnum; ++i)
 	{
 		if (sh[i].sh_type != SHT_SYMTAB)
@@ -149,8 +149,8 @@ static bool parse_elf(const std::string &path, TestImage &img)
 			continue;
 		}
 
-		const auto *syms   = reinterpret_cast<const Elf32_Sym *>(raw.data() + sh[i].sh_offset);
-		const char *strtab = reinterpret_cast<const char *>(raw.data() + sh[sh[i].sh_link].sh_offset);
+		const auto* syms   = reinterpret_cast<const Elf32_Sym*>(raw.data() + sh[i].sh_offset);
+		const char* strtab = reinterpret_cast<const char*>(raw.data() + sh[sh[i].sh_link].sh_offset);
 		int         nsyms  = static_cast<int>(sh[i].sh_size / sizeof(Elf32_Sym));
 
 		for (int j = 0; j < nsyms; ++j)
@@ -174,7 +174,7 @@ static bool parse_elf(const std::string &path, TestImage &img)
 static constexpr uint32_t MAX_STEPS     = 10'000'000;
 static constexpr uint32_t POLL_INTERVAL = 128;
 
-static bool run_test(const std::string &path)
+static bool run_test(const std::string& path)
 {
 	TestImage   img;
 	std::string name = std::filesystem::path(path).stem().string();
@@ -208,7 +208,7 @@ static bool run_test(const std::string &path)
 		{
 			cpu.step();
 		}
-		catch (const std::exception &e)
+		catch (const std::exception& e)
 		{
 			crash_reason = e.what();
 			break;
@@ -236,7 +236,7 @@ static bool run_test(const std::string &path)
 	return passed;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
 	if (argc < 2)
 	{

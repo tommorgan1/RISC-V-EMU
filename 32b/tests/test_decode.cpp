@@ -8,7 +8,7 @@
 
 // Asserts an optional has a value and returns it
 template <typename T>
-T require_value(const std::optional<T> &opt, const char *name)
+T require_value(const std::optional<T>& opt, const char* name)
 {
 	INFO("Expected " << name << " to have a value but it was nullopt");
 	REQUIRE(opt.has_value());

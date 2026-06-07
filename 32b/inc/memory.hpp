@@ -26,9 +26,9 @@ class Memory
 
 	// Reads
 	// Value returned with the out parameter, fault through return value
-	memFault read8(uint32_t address, uint8_t &out) const;
-	memFault read16(uint32_t address, uint16_t &out) const;
-	memFault read32(uint32_t address, uint32_t &out) const;
+	memFault read8(uint32_t address, uint8_t& out) const;
+	memFault read16(uint32_t address, uint16_t& out) const;
+	memFault read32(uint32_t address, uint32_t& out) const;
 
 	// Writes
 	memFault write8(uint32_t address, uint8_t value);
@@ -41,5 +41,5 @@ class Memory
 
 	// Translates physical address of vector index
 	// Returns false if out of bounds
-	bool translate(uint32_t address, size_t access_size, size_t &index) const;
+	bool translate(uint32_t address, size_t access_size, size_t& index) const;
 };

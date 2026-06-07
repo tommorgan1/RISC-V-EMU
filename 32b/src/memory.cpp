@@ -9,7 +9,7 @@ Memory::Memory(uint32_t base, size_t size)
 {
 }
 
-bool Memory::translate(uint32_t address, size_t access_size, size_t &index) const
+bool Memory::translate(uint32_t address, size_t access_size, size_t& index) const
 {
 	if (address < _base)
 	{
@@ -41,7 +41,7 @@ bool Memory::load(std::span<const uint8_t> data, uint32_t address)
 	return true;
 }
 
-memFault Memory::read8(uint32_t address, uint8_t &out) const
+memFault Memory::read8(uint32_t address, uint8_t& out) const
 {
 	size_t index;
 
@@ -55,7 +55,7 @@ memFault Memory::read8(uint32_t address, uint8_t &out) const
 	return memFault::none;
 }
 
-memFault Memory::read16(uint32_t address, uint16_t &out) const
+memFault Memory::read16(uint32_t address, uint16_t& out) const
 {
 	size_t index;
 	if (!translate(address, 2, index))
@@ -66,7 +66,7 @@ memFault Memory::read16(uint32_t address, uint16_t &out) const
 	return memFault::none;
 }
 
-memFault Memory::read32(uint32_t address, uint32_t &out) const
+memFault Memory::read32(uint32_t address, uint32_t& out) const
 {
 	size_t index;
 	if (!translate(address, 4, index))
