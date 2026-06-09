@@ -161,12 +161,7 @@ instruction counter: 302317
 - cmd: perf report --stdio --no-children -i perf.data 2>/dev/null | head -50
 - --no-children reports time spent in each functions logic, not dispatched functions 
 
-# Samples: 2K of event 'cpu_core/cycles/P'
-# Event count (approx.): 2609568327
-#
-# Overhead  Command      Shared Object         Symbol                                                                                                                                                                                                                                                             
-# ........  ...........  ....................  ...................................................................................................................................................................................................................................................................
-#
+
     27.96%  riscv-bench  riscv-bench           [.] decode::decode(unsigned int)
     16.95%  riscv-bench  riscv-bench           [.] CPU::execute(InstructionField const&)
     16.27%  riscv-bench  riscv-bench           [.] Memory::read32(unsigned int, unsigned int&) const
