@@ -161,6 +161,9 @@ instruction counter: 302317
 - cmd: perf report --stdio --no-children -i perf.data 2>/dev/null | head -50
 - --no-children reports time spent in each functions logic, not dispatched functions 
 
+# Overhead  Command      Shared Object         Symbol                                                                                                                                                                                                                                                             
+# ........  ...........  ....................  ...................................................................................................................................................................................................................................................................
+#
 
     27.96%  riscv-bench  riscv-bench           [.] decode::decode(unsigned int)
     16.95%  riscv-bench  riscv-bench           [.] CPU::execute(InstructionField const&)
