@@ -309,7 +309,7 @@ void CPU::execute_S(const InstructionField& field)
 		return;
 	}
 
-	memFault f   = memFault::none;
+	memFault f = memFault::none;
 
 	switch (field.funct3.value())
 	{
@@ -457,7 +457,7 @@ void CPU::execute_SYS(const InstructionField& field)
 		case 0x1:
 		{
 			uint32_t old = read_CSR(csr);
-			write_CSR(csr, rs1v);              // CSRRW — write rs1 to CSR
+			write_CSR(csr, rs1v);             // CSRRW — write rs1 to CSR
 			writeReg(field.rd.value(), old);  // CSRRW — return old CSR value
 			break;
 		}
@@ -484,7 +484,7 @@ void CPU::execute_SYS(const InstructionField& field)
 		case 0x5:
 		{
 			uint32_t old = read_CSR(csr);
-			write_CSR(csr, zimm);              // CSRRWI — write uimm to CSR
+			write_CSR(csr, zimm);             // CSRRWI — write uimm to CSR
 			writeReg(field.rd.value(), old);  // CSRRWI — return old CSR value
 			break;
 		}

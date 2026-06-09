@@ -155,7 +155,7 @@ InstructionField decode(uint32_t instruction)
 			return decode_S(instruction);
 		case 0x63:
 			return decode_B(instruction);
-		case 0x37:
+		case 0x37:  // Deliberate fallthrough as 0x37 and 0x17 have same decode
 		case 0x17:
 			return decode_U(instruction);
 		case 0x6F:

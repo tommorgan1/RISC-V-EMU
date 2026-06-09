@@ -16,9 +16,9 @@ FetchContent_MakeAvailable(Catch2)
 # ── Core emulator library  ────────────────────────────
 add_library(riscv-emu-lib STATIC
     src/memory.cpp
-    src/cpu.cpp
     src/decode.cpp
     src/cpu.cpp
+    src/elf_loader.cpp
 )
 
 target_include_directories(riscv-emu-lib PUBLIC
@@ -52,3 +52,4 @@ include(Catch)
 catch_discover_tests(riscv-emu-tests)
 
 add_subdirectory(tests/compliance)
+add_subdirectory(bench)

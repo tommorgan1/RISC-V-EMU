@@ -42,8 +42,8 @@ class CPU
 
 	uint64_t instruction_count() const { return _instruction_count; }
 
-	// Halt address for benchmarking, use run_until_halt() and when this address is written or read 
-	// execute_S will catch it and set the halt flag which will then exit the program 
+	// Halt address for benchmarking, use run_until_halt() and when this address is written or read
+	// execute_S will catch it and set the halt flag which will then exit the program
 	static constexpr uint32_t HALT_ADDR = 0x10000000;
 
  private:
@@ -51,8 +51,8 @@ class CPU
 	std::unordered_map<uint32_t, uint32_t> _csrs;
 	uint32_t                               _pc{};
 	Memory                                 _memory;
-	uint64_t															 _instruction_count;
-	bool 																	 _halted;		 
+	uint64_t                               _instruction_count{0};
+	bool                                   _halted{false};
 
 	uint32_t fetch();
 
