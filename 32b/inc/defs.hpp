@@ -31,15 +31,15 @@ enum class InstructionType
 
 struct InstructionField
 {
-	InstructionType         type;
-	uint32_t                raw;
-	uint32_t                opcode;
-	std::optional<uint32_t> rd;
-	std::optional<uint32_t> rs1;
-	std::optional<uint32_t> rs2;
-	std::optional<uint32_t> funct3;
-	std::optional<uint32_t> funct7;
-	std::optional<int32_t>  imm;
+	InstructionType type   = InstructionType::ILLEGAL;
+	uint32_t        raw    = 0;
+	uint32_t        opcode = 0;
+	uint32_t        rd     = 0;
+	uint32_t        rs1    = 0;
+	uint32_t        rs2    = 0;
+	uint32_t        funct3 = 0;
+	uint32_t        funct7 = 0;
+	uint32_t        imm    = 0;
 };
 
 // CSR registers

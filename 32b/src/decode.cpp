@@ -14,7 +14,7 @@ InstructionField decode_R(uint32_t instruction)
 	        .rs2    = (instruction >> 20) & 0x1F,
 	        .funct3 = (instruction >> 12) & 0x7,
 	        .funct7 = (instruction >> 25) & 0x7F,
-	        .imm    = std::nullopt};
+	        .imm    = 0};
 }
 
 InstructionField decode_I(uint32_t instruction)
@@ -24,7 +24,7 @@ InstructionField decode_I(uint32_t instruction)
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
 	        .rs1    = (instruction >> 15) & 0x1F,
-	        .rs2    = std::nullopt,
+	        .rs2    = 0,
 	        .funct3 = (instruction >> 12) & 0x7,
 	        .funct7 = (instruction >> 25) & 0x7F,
 	        .imm    = bits::sign_extend((instruction >> 20) & 0xFFF, 12)};
@@ -37,9 +37,9 @@ InstructionField decode_IL(uint32_t instruction)
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
 	        .rs1    = (instruction >> 15) & 0x1F,
-	        .rs2    = std::nullopt,
+	        .rs2    = 0,
 	        .funct3 = (instruction >> 12) & 0x7,
-	        .funct7 = std::nullopt,
+	        .funct7 = 0,
 	        .imm    = bits::sign_extend((instruction >> 20) & 0xFFF, 12)};
 }
 
@@ -50,9 +50,9 @@ InstructionField decode_JALR(uint32_t instruction)
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
 	        .rs1    = (instruction >> 15) & 0x1F,
-	        .rs2    = std::nullopt,
+	        .rs2    = 0,
 	        .funct3 = (instruction >> 12) & 0x7,
-	        .funct7 = std::nullopt,
+	        .funct7 = 0,
 	        .imm    = bits::sign_extend((instruction >> 20) & 0xFFF, 12)};
 }
 
@@ -64,11 +64,11 @@ InstructionField decode_S(uint32_t instruction)
 	return {.type   = InstructionType::S,
 	        .raw    = instruction,
 	        .opcode = instruction & 0x7F,
-	        .rd     = std::nullopt,
+	        .rd     = 0,
 	        .rs1    = (instruction >> 15) & 0x1F,
 	        .rs2    = (instruction >> 20) & 0x1F,
 	        .funct3 = (instruction >> 12) & 0x7,
-	        .funct7 = std::nullopt,
+	        .funct7 = 0,
 	        .imm    = imm};
 }
 
@@ -82,11 +82,11 @@ InstructionField decode_B(uint32_t instruction)
 	return {.type   = InstructionType::B,
 	        .raw    = instruction,
 	        .opcode = instruction & 0x7F,
-	        .rd     = std::nullopt,
+	        .rd     = 0,
 	        .rs1    = (instruction >> 15) & 0x1F,
 	        .rs2    = (instruction >> 20) & 0x1F,
 	        .funct3 = (instruction >> 12) & 0x7,
-	        .funct7 = std::nullopt,
+	        .funct7 = 0,
 	        .imm    = imm};
 }
 
@@ -96,10 +96,10 @@ InstructionField decode_U(uint32_t instruction)
 	        .raw    = instruction,
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
-	        .rs1    = std::nullopt,
-	        .rs2    = std::nullopt,
-	        .funct3 = std::nullopt,
-	        .funct7 = std::nullopt,
+	        .rs1    = 0,
+	        .rs2    = 0,
+	        .funct3 = 0,
+	        .funct7 = 0,
 	        .imm    = static_cast<int32_t>(instruction & 0xFFFFF000)};
 }
 
@@ -114,10 +114,10 @@ InstructionField decode_J(uint32_t instruction)
 	        .raw    = instruction,
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
-	        .rs1    = std::nullopt,
-	        .rs2    = std::nullopt,
-	        .funct3 = std::nullopt,
-	        .funct7 = std::nullopt,
+	        .rs1    = 0,
+	        .rs2    = 0,
+	        .funct3 = 0,
+	        .funct7 = 0,
 	        .imm    = imm};
 }
 
@@ -128,9 +128,9 @@ InstructionField decode_SYS(uint32_t instruction)
 	        .opcode = instruction & 0x7F,
 	        .rd     = (instruction >> 7) & 0x1F,
 	        .rs1    = (instruction >> 15) & 0x1F,
-	        .rs2    = std::nullopt,
+	        .rs2    = 0,
 	        .funct3 = (instruction >> 12) & 0x7,
-	        .funct7 = std::nullopt,
+	        .funct7 = 0,
 	        .imm    = static_cast<int32_t>((instruction >> 20) & 0xFFF)};
 }
 }  // namespace

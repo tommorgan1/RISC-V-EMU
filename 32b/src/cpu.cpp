@@ -136,11 +136,11 @@ void CPU::execute(const InstructionField& field)
 
 void CPU::execute_R(const InstructionField& field)
 {
-	uint32_t rs1    = readReg(field.rs1.value());
-	uint32_t rs2    = readReg(field.rs2.value());
+	uint32_t rs1    = readReg(field.rs1);
+	uint32_t rs2    = readReg(field.rs2);
 	uint32_t result = 0;
 
-	switch ((field.funct3.value() << 8) | field.funct7.value())
+	switch ((field.funct3 << 8) | field.funct7)
 	{
 		case (0x0 << 8) | 0x00:
 			result = rs1 + rs2;  // ADD
@@ -178,17 +178,17 @@ void CPU::execute_R(const InstructionField& field)
 			break;
 	}
 
-	writeReg(field.rd.value(), result);
+	writeReg(field.rd, result);
 }
 
 void CPU::execute_I(const InstructionField& field)
 {
-	uint32_t rs1    = readReg(field.rs1.value());
-	int32_t  imm    = field.imm.value();
+	uint32_t rs1    = readReg(field.rs1);
+	int32_t  imm    = field.imm;
 	uint32_t shamt  = imm & 0x1F;
 	uint32_t result = 0;
 
-	switch (field.funct3.value())
+	switch (field.funct3)
 	{
 		case 0x0:
 			result = static_cast<uint32_t>(static_cast<int32_t>(rs1) + imm);  // ADDI
@@ -213,7 +213,7 @@ void CPU::execute_I(const InstructionField& field)
 			break;
 
 		case 0x5:
-			switch (field.funct7.value())
+			switch (field.funct7)
 			{
 				case 0x00:
 					result = rs1 >> shamt;  // SRLI
@@ -231,16 +231,15 @@ void CPU::execute_I(const InstructionField& field)
 			throw std::runtime_error("Unknown funct3 for I-type at PC: " + hex32(_pc - 4));
 	}
 
-	writeReg(field.rd.value(), result);
+	writeReg(field.rd, result);
 }
 
 void CPU::execute_IL(const InstructionField& field)
 {
-	uint32_t addr =
-	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
+	uint32_t addr   = static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1)) + field.imm);
 	uint32_t result = 0;
 
-	switch (field.funct3.value())
+	switch (field.funct3)
 	{
 		case 0x0:
 		{
@@ -294,14 +293,13 @@ void CPU::execute_IL(const InstructionField& field)
 			throw std::runtime_error("Unknown funct3 for load at PC: " + hex32(_pc - 4));
 	}
 
-	writeReg(field.rd.value(), result);
+	writeReg(field.rd, result);
 }
 
 void CPU::execute_S(const InstructionField& field)
 {
-	uint32_t addr =
-	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
-	uint32_t src = readReg(field.rs2.value());
+	uint32_t addr = static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1)) + field.imm);
+	uint32_t src  = readReg(field.rs2);
 
 	if (addr == HALT_ADDR)
 	{
@@ -311,7 +309,7 @@ void CPU::execute_S(const InstructionField& field)
 
 	memFault f = memFault::none;
 
-	switch (field.funct3.value())
+	switch (field.funct3)
 	{
 		case 0x0:
 			f = _memory.write8(addr, static_cast<uint8_t>(src));  // SB
@@ -334,12 +332,12 @@ void CPU::execute_S(const InstructionField& field)
 
 void CPU::execute_B(const InstructionField& field, uint32_t current_pc)
 {
-	uint32_t rs1   = readReg(field.rs1.value());
-	uint32_t rs2   = readReg(field.rs2.value());
-	int32_t  imm   = field.imm.value();
+	uint32_t rs1   = readReg(field.rs1);
+	uint32_t rs2   = readReg(field.rs2);
+	int32_t  imm   = field.imm;
 	bool     taken = false;
 
-	switch (field.funct3.value())
+	switch (field.funct3)
 	{
 		case 0x0:
 			taken = (rs1 == rs2);  // BEQ
@@ -371,15 +369,15 @@ void CPU::execute_B(const InstructionField& field, uint32_t current_pc)
 
 void CPU::execute_U(const InstructionField& field, uint32_t current_pc)
 {
-	uint32_t imm = static_cast<uint32_t>(field.imm.value());
+	uint32_t imm = static_cast<uint32_t>(field.imm);
 
 	switch (field.opcode)
 	{
 		case 0x37:
-			writeReg(field.rd.value(), imm);  // LUI
+			writeReg(field.rd, imm);  // LUI
 			break;
 		case 0x17:
-			writeReg(field.rd.value(), current_pc + imm);  // AUIPC
+			writeReg(field.rd, current_pc + imm);  // AUIPC
 			break;
 		default:
 			throw std::runtime_error("Unknown opcode for U-type at PC: " + hex32(_pc - 4));
@@ -388,26 +386,25 @@ void CPU::execute_U(const InstructionField& field, uint32_t current_pc)
 
 void CPU::execute_J(const InstructionField& field, uint32_t current_pc)
 {
-	writeReg(field.rd.value(), (current_pc + 4));  // JAL — save return address
-	_pc = static_cast<uint32_t>(static_cast<int32_t>(current_pc) +
-	                            field.imm.value());  // JAL — jump to target
+	writeReg(field.rd, (current_pc + 4));  // JAL — save return address
+	_pc =
+	    static_cast<uint32_t>(static_cast<int32_t>(current_pc) + field.imm);  // JAL — jump to target
 }
 
 void CPU::execute_JALR(const InstructionField& field, uint32_t current_pc)
 {
-	uint32_t target =
-	    static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1.value())) + field.imm.value());
-	writeReg(field.rd.value(), (current_pc + 4));  // JALR — save return address
-	_pc = (target & ~1u);                          // JALR — jump to target, clear LSB
+	uint32_t target = static_cast<uint32_t>(static_cast<int32_t>(readReg(field.rs1)) + field.imm);
+	writeReg(field.rd, (current_pc + 4));  // JALR — save return address
+	_pc = (target & ~1u);                  // JALR — jump to target, clear LSB
 }
 
 void CPU::execute_SYS(const InstructionField& field)
 {
-	uint32_t csr  = static_cast<uint32_t>(field.imm.value());
-	uint32_t rs1v = readReg(field.rs1.value());
-	uint32_t zimm = field.rs1.value();  // zero-extended 5-bit uimm for *I variants
+	uint32_t csr  = static_cast<uint32_t>(field.imm);
+	uint32_t rs1v = readReg(field.rs1);
+	uint32_t zimm = field.rs1;  // zero-extended 5-bit uimm for *I variants
 
-	switch (field.funct3.value())
+	switch (field.funct3)
 	{
 		case 0x0:  // ECALL / EBREAK / MRET / WFI
 			if (csr == 0x000)
@@ -457,8 +454,8 @@ void CPU::execute_SYS(const InstructionField& field)
 		case 0x1:
 		{
 			uint32_t old = read_CSR(csr);
-			write_CSR(csr, rs1v);             // CSRRW — write rs1 to CSR
-			writeReg(field.rd.value(), old);  // CSRRW — return old CSR value
+			write_CSR(csr, rs1v);     // CSRRW — write rs1 to CSR
+			writeReg(field.rd, old);  // CSRRW — return old CSR value
 			break;
 		}
 		case 0x2:
@@ -468,7 +465,7 @@ void CPU::execute_SYS(const InstructionField& field)
 			{
 				write_CSR(csr, old | rs1v);  // CSRRS — set bits in CSR
 			}
-			writeReg(field.rd.value(), old);  // CSRRS — return old CSR value
+			writeReg(field.rd, old);  // CSRRS — return old CSR value
 			break;
 		}
 		case 0x3:
@@ -478,14 +475,14 @@ void CPU::execute_SYS(const InstructionField& field)
 			{
 				write_CSR(csr, old & ~rs1v);  // CSRRC — clear bits in CSR
 			}
-			writeReg(field.rd.value(), old);  // CSRRC — return old CSR value
+			writeReg(field.rd, old);  // CSRRC — return old CSR value
 			break;
 		}
 		case 0x5:
 		{
 			uint32_t old = read_CSR(csr);
-			write_CSR(csr, zimm);             // CSRRWI — write uimm to CSR
-			writeReg(field.rd.value(), old);  // CSRRWI — return old CSR value
+			write_CSR(csr, zimm);     // CSRRWI — write uimm to CSR
+			writeReg(field.rd, old);  // CSRRWI — return old CSR value
 			break;
 		}
 		case 0x6:
@@ -495,7 +492,7 @@ void CPU::execute_SYS(const InstructionField& field)
 			{
 				write_CSR(csr, old | zimm);  // CSRRSI — set bits in CSR using uimm
 			}
-			writeReg(field.rd.value(), old);  // CSRRSI — return old CSR value
+			writeReg(field.rd, old);  // CSRRSI — return old CSR value
 			break;
 		}
 		case 0x7:
@@ -505,7 +502,7 @@ void CPU::execute_SYS(const InstructionField& field)
 			{
 				write_CSR(csr, old & ~zimm);  // CSRRCI — clear bits in CSR using uimm
 			}
-			writeReg(field.rd.value(), old);  // CSRRCI — return old CSR value
+			writeReg(field.rd, old);  // CSRRCI — return old CSR value
 			break;
 		}
 		default:

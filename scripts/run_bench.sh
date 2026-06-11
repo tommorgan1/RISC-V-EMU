@@ -31,36 +31,45 @@ if [[ $needs_build -eq 1 ]]; then
   cmake --build "$BUILD_DIR" --target riscv-bench bench_elf -j"$(nproc)"
 fi
 
-# ── Optional: pin CPU frequency on cores 3-4 to avoid turbo variance ─────────
-# Requires cpupower or direct sysfs access; skip silently if unavailable.
+# ── Pin CPU frequency on cores to avoid idle-downclocking variance ───────────
+# Requires root. Sets the performance governor so the CPU doesn't drop to an
+# idle P-state between nanobench iterations. Turbo stays enabled so the warmup
+# epochs ramp the core to full boost before measurement begins.
+# (Disabling turbo via no_turbo would lock to the 1.4 GHz base P-state, ~3x
+# slower than boost — use that only if you need stable numbers under sustained
+# thermal load.)
 
-freq_pinned=1
-if command -v cpupower &>/dev/null && [[ $EUID -eq 0 ]]; then
-  echo "==> Pinning CPU 3-4 to performance governor..."
-  cpupower -c 3-4 frequency-set -g performance &>/dev/null && freq_pinned=1
-elif [[ -w /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor ]]; then
-  for cpu in 3 4; do
-    echo performance > /sys/devices/system/cpu/cpu${cpu}/cpufreq/scaling_governor
-  done
+freq_pinned=0
+
+if [[ $EUID -ne 0 ]]; then
+  echo "WARNING: not running as root — CPU governor will not be set."
+  echo "         Run with sudo to prevent idle downclocking between iterations."
+  echo ""
+elif command -v cpupower &>/dev/null; then
+  cpupower -c "$CPUS" frequency-set -g performance &>/dev/null
   freq_pinned=1
+  echo "==> CPU $CPUS governor → performance (turbo on)"
+  echo ""
 fi
 
 restore_freq() {
-  if [[ $freq_pinned -eq 1 ]]; then
-    if command -v cpupower &>/dev/null && [[ $EUID -eq 0 ]]; then
-      cpupower -c 3-4 frequency-set -g schedutil &>/dev/null || true
-    elif [[ -w /sys/devices/system/cpu/cpu3/cpufreq/scaling_governor ]]; then
-      for cpu in 3 4; do
-        echo schedutil > /sys/devices/system/cpu/cpu${cpu}/cpufreq/scaling_governor || true
-      done
-    fi
-  fi
+  [[ $freq_pinned -eq 1 ]] || return
+  cpupower -c "$CPUS" frequency-set -g powersave &>/dev/null || true
 }
 trap restore_freq EXIT
 
 # ── Run benchmark pinned to isolated cores ────────────────────────────────────
 
+PERF_DATA="$REPO_ROOT/perf.data"
+
 echo "==> Running benchmark on CPU(s) $CPUS..."
 echo ""
 
-exec taskset -c "$CPUS" "$BENCH_BIN" "$@"
+perf record -q -o "$PERF_DATA" taskset -c "$CPUS" "$BENCH_BIN" "$@"
+bench_exit=$?
+
+echo ""
+echo "==> perf report (top 50 symbols):"
+perf report --stdio --no-children -i "$PERF_DATA" 2>/dev/null | head -50
+
+exit $bench_exit
