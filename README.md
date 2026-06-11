@@ -189,3 +189,67 @@ instruction counter: 302317
 
 - Significant time spent in decode. Upon reading, likely due to the std::optional fields in the InstructionField struct. Area for possible optimisation 
 
+- With std::optional removed, MIPS has a marked increase
+
+==> CPU 3-4 governor → performance (turbo on)
+
+==> Running benchmark on CPU(s) 3-4...
+
+Warning, results might be unstable:
+* CPU frequency scaling enabled: CPU 0 between 400.0 and 4,500.0 MHz
+* CPU governor is 'powersave' but should be 'performance'
+* Turbo is enabled, CPU frequency will fluctuate
+
+Recommendations
+* Use 'pyperf system tune' before benchmarking. See https://github.com/psf/pyperf
+
+|              ns/run |               run/s |    err% |         ins/run |         cyc/run |    IPC |        bra/run |   miss% |     total | rv32ui emulator
+|--------------------:|--------------------:|--------:|----------------:|----------------:|-------:|---------------:|--------:|----------:|:----------------
+|        1,994,440.17 |              501.39 |    0.2% |   46,569,980.95 |    5,818,806.78 |  8.003 |   7,659,560.45 |    0.0% |      0.48 | `bench.elf throughput`
+
+estimated MIPS: 151.58
+instruction counter: 302317
+
+==> perf report (top 50 symbols):
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 1K of event 'cpu_core/cycles/P'
+# Event count (approx.): 2341431642
+#
+# Overhead  Command      Shared Object         Symbol                                                                                                                                                                                                                                                             
+# ........  ...........  ....................  ...................................................................................................................................................................................................................................................................
+#
+    28.09%  riscv-bench  riscv-bench           [.] decode::decode(unsigned int)
+    17.70%  riscv-bench  riscv-bench           [.] CPU::execute(InstructionField const&)
+    16.73%  riscv-bench  riscv-bench           [.] Memory::read32(unsigned int, unsigned int&) const
+    14.10%  riscv-bench  riscv-bench           [.] CPU::run_until_halt()
+     9.01%  riscv-bench  riscv-bench           [.] CPU::execute_B(InstructionField const&, unsigned int)
+     6.27%  riscv-bench  riscv-bench           [.] CPU::execute_R(InstructionField const&)
+     5.05%  riscv-bench  riscv-bench           [.] CPU::execute_I(InstructionField const&)
+     2.06%  riscv-bench  [kernel.kallsyms]     [k] intel_gpio_irq
+     0.20%  riscv-bench  libc.so.6             [.] __memmove_avx_unaligned_erms
+     0.20%  riscv-bench  [kernel.kallsyms]     [k] smp_call_function_many_cond
+     0.15%  riscv-bench  [kernel.kallsyms]     [k] intel_gpio_irq_mask_unmask
+     0.08%  riscv-bench  riscv-bench           [.] void ankerl::nanobench::detail::LinuxPerformanceCounters::calibrate<ankerl::nanobench::detail::PerformanceCounters::PerformanceCounters()::{lambda()#1}>(ankerl::nanobench::detail::PerformanceCounters::PerformanceCounters()::{lambda()#1}&&) [clone .isra.0]
+     0.05%  riscv-bench  [kernel.kallsyms]     [k] common_interrupt
+     0.05%  riscv-bench  [kernel.kallsyms]     [k] _raw_spin_lock
+     0.04%  riscv-bench  [kernel.kallsyms]     [k] _raw_spin_lock_irq
+     0.03%  riscv-bench  [kernel.kallsyms]     [k] sync_regs
+     0.03%  riscv-bench  ld-linux-x86-64.so.2  [.] _dl_runtime_resolve_xsavec
+     0.03%  riscv-bench  ld-linux-x86-64.so.2  [.] do_lookup_x
+     0.02%  riscv-bench  ld-linux-x86-64.so.2  [.] _dl_relocate_object_no_relro
+     0.02%  riscv-bench  [kernel.kallsyms]     [k] __memcg_slab_post_alloc_hook
+     0.02%  riscv-bench  [kernel.kallsyms]     [k] __wp_page_copy_user
+     0.01%  taskset      [kernel.kallsyms]     [k] tlb_flush_mmu_tlbonly
+     0.01%  taskset      ld-linux-x86-64.so.2  [.] open_verify.constprop.0
+     0.01%  riscv-bench  [kernel.kallsyms]     [k] vma_adjust_trans_huge
+     0.01%  taskset      [kernel.kallsyms]     [k] next_uptodate_folio
+     0.01%  taskset      [kernel.kallsyms]     [k] kfree
+     0.01%  taskset      [kernel.kallsyms]     [k] kmem_cache_alloc_noprof
+     0.01%  taskset      [kernel.kallsyms]     [k] kmem_cache_free
+     0.01%  taskset      [kernel.kallsyms]     [k] mt_find
+
+- MIPS increased from ~130 to ~150. Note that the percent spent in decode has not changed though, performance increase was across the whole codebase
