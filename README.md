@@ -13,6 +13,54 @@
 
 ---
 
+## Guide
+
+### Requirements
+
+| Dependency | Purpose |
+|---|---|
+| CMake > 3.15, C++20 compiler | Build system |
+| `riscv64-unknown-elf-gcc` | Cross-compile the benchmark ELF (`bench.S`) |
+| `perf` | Profiling via `run_bench.sh` |
+| `cpupower` | CPU governor control in `run_bench.sh` (requires sudo) |
+| `taskset` | Core pinning (part of `util-linux`, usually pre-installed) |
+
+[nanobench](https://github.com/martinus/nanobench) and [Catch2](https://github.com/catchorg/Catch2) are fetched automatically by CMake at configure time.
+
+### Building and testing
+
+```bash
+./scripts/build_and_test.sh
+
+```
+
+This builds three binaries in 32b/build/
+
+| Binary | Description |
+|---|---|
+| `riscv-emu` | Standalone emulator |
+| `riscv-emu-tests` | Catch2 unit + compliance test runner |
+| `bench/riscv-bench` | Nanobench MIPS harness |
+
+It then runs the tests in 32b/tests/. This includes unit tests for the memory, decode and execute functions as well as the `rv32ui-p-*` comlpliance suite totalling 82 tests.
+
+
+### Benchmarking
+
+```bash
+sudo ./scripts/run_bench.sh
+```
+
+The script:
+1. Rebuilds the benchmark binary if any source is newer than the binary
+2. Sets the CPU governor to `performance` on cores 3–4 to prevent idle downclocking between nanobench iterations, then restores it on exit
+3. Runs the benchmark under `perf record` pinned to cores 3–4 via `taskset`
+4. Prints the nanobench MIPS result followed by a `perf report` hotspot summary
+
+> Without sudo the governor step is skipped and a warning is printed — results will still run but may have more variance between runs.
+
+---
+
 ## Instruction List
 
 ### R-type
