@@ -369,7 +369,7 @@ void CPU::execute_B(const InstructionField& field, uint32_t current_pc)
 
 void CPU::execute_U(const InstructionField& field, uint32_t current_pc)
 {
-	uint32_t imm = static_cast<uint32_t>(field.imm);
+	uint32_t imm = field.imm;
 
 	switch (field.opcode)
 	{
