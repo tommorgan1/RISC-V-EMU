@@ -38,7 +38,7 @@ class CPU
 
 	std::optional<uint32_t> peekWord(uint32_t addr) const;
 
-	std::optional<stopReason> step();
+ 	void step();
 
 	uint64_t instruction_count() const { return _instruction_count; }
 

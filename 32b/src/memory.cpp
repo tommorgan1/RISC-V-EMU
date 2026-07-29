@@ -1,7 +1,8 @@
 #include "memory.hpp"
 
-// TODO add template function for constructing words from bytes to utils for use
-// in read16, read32
+#include <cstring>
+
+// TODO change all reads and writes to use memcpy instead of manual bitshifting
 
 Memory::Memory(uint32_t base, size_t size)
   : _base(base)
@@ -74,10 +75,7 @@ memFault Memory::read32(uint32_t address, uint32_t& out) const
 		return memFault::outOfBounds;
 	}
 
-	out = static_cast<uint32_t>(_data[index]) | static_cast<uint32_t>(_data[index + 1]) << 8 |
-	      static_cast<uint32_t>(_data[index + 2]) << 16 |
-	      static_cast<uint32_t>(_data[index + 3]) << 24;
-
+	std::memcpy(&out, &_data[index], 4);
 	return memFault::none;
 }
 

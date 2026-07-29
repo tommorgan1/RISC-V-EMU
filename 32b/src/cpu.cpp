@@ -57,13 +57,13 @@ void CPU::write_CSR(uint32_t address, uint32_t value)
 	_csrs[address] = value;
 }
 
-std::optional<CPU::stopReason> CPU::step()
+void CPU::step()
 {
 	uint32_t         instruction = fetch();
 	InstructionField field       = decode::decode(instruction);
 	execute(field);
 	++_instruction_count;
-	return std::nullopt;
+	// return std::nullopt;
 }
 
 void CPU::run()
