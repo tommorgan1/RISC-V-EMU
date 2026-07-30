@@ -239,6 +239,7 @@ instruction counter: 302317
 
 - With std::optional removed, MIPS has a marked increase
 
+```
 ==> CPU 3-4 governor → performance (turbo on)
 
 ==> Running benchmark on CPU(s) 3-4...
@@ -258,18 +259,7 @@ Recommendations
 estimated MIPS: 151.58
 instruction counter: 302317
 
-==> perf report (top 50 symbols):
-# To display the perf.data header info, please use --header/--header-only options.
-#
-#
-# Total Lost Samples: 0
-#
-# Samples: 1K of event 'cpu_core/cycles/P'
-# Event count (approx.): 2341431642
-#
-# Overhead  Command      Shared Object         Symbol                                                                                                                                                                                                                                                             
-# ........  ...........  ....................  ...................................................................................................................................................................................................................................................................
-#
+
     28.09%  riscv-bench  riscv-bench           [.] decode::decode(unsigned int)
     17.70%  riscv-bench  riscv-bench           [.] CPU::execute(InstructionField const&)
     16.73%  riscv-bench  riscv-bench           [.] Memory::read32(unsigned int, unsigned int&) const
@@ -300,4 +290,104 @@ instruction counter: 302317
      0.01%  taskset      [kernel.kallsyms]     [k] kmem_cache_free
      0.01%  taskset      [kernel.kallsyms]     [k] mt_find
 
+```
+
 - MIPS increased from ~130 to ~150. Note that the percent spent in decode has not changed though, performance increase was across the whole codebase
+
+# Next optimisation... 
+
+Next up, we can see that read32() is also eating up a large percent of time (albeit not the most) but it is worth taking a look at. 
+
+```cpp
+memFault Memory::read32(uint32_t address, uint32_t& out) const
+{
+  size_t index;
+  if (!translate(address, 4, index))
+  {
+    return memFault::outOfBounds;
+  }
+
+  out = static_cast<uint32_t>(_data[index]) |
+        static_cast<uint32_t>(_data[index + 1]) << 8  |
+        static_cast<uint32_t>(_data[index + 2]) << 16 |
+        static_cast<uint32_t>(_data[index + 3]) << 24;
+
+  return memFault::none;
+}
+
+```
+For every read, that is four data accesses, three ORs and three bitshifts. That is a lot of operations when we are simply moving bits out of a vector. Thankfully, memcpy can help us here. See below:
+
+```cpp
+memFault Memory::read32(uint32_t address, uint32_t& out) const
+{
+	size_t index;
+	if (!translate(address, 4, index))
+	{
+		return memFault::outOfBounds;
+	}
+
+	std::memcpy(&out, &_data[index], 4);
+	return memFault::none;
+}
+```
+
+Now running the benchmark post optimisation: 
+
+```
+
+==> CPU 3-4 governor → performance (turbo on)
+
+==> Running benchmark on CPU(s) 3-4...
+
+Warning, results might be unstable:
+* CPU frequency scaling enabled: CPU 0 between 400.0 and 4,500.0 MHz
+* CPU governor is 'powersave' but should be 'performance'
+* Turbo is enabled, CPU frequency will fluctuate
+
+Recommendations
+* Use 'pyperf system tune' before benchmarking. See https://github.com/psf/pyperf
+
+|              ns/run |               run/s |    err% |         ins/run |         cyc/run |    IPC |        bra/run |   miss% |     total | rv32ui emulator
+|--------------------:|--------------------:|--------:|----------------:|----------------:|-------:|---------------:|--------:|----------:|:----------------
+|        1,759,337.52 |              568.40 |    0.9% |   43,544,249.70 |    5,247,022.86 |  8.299 |   7,659,559.15 |    0.0% |      0.43 | `bench.elf throughput`
+
+estimated MIPS: 171.84
+instruction counter : 302317                                                                                                                
+# 
+#
+    28.43%  riscv-bench  riscv-bench           [.] decode::decode(unsigned int)
+    21.48%  riscv-bench  riscv-bench           [.] CPU::execute(InstructionField const&)
+    16.46%  riscv-bench  riscv-bench           [.] CPU::run_until_halt()
+    10.97%  riscv-bench  riscv-bench           [.] Memory::read32(unsigned int, unsigned int&) const
+     8.55%  riscv-bench  riscv-bench           [.] CPU::execute_B(InstructionField const&, unsigned int)
+     7.22%  riscv-bench  riscv-bench           [.] CPU::execute_R(InstructionField const&)
+     5.84%  riscv-bench  riscv-bench           [.] CPU::execute_I(InstructionField const&)
+     0.23%  riscv-bench  libc.so.6             [.] __memmove_avx_unaligned_erms
+     0.19%  riscv-bench  [kernel.kallsyms]     [k] smp_call_function_many_cond
+     0.13%  riscv-bench  riscv-bench           [.] void ankerl::nanobench::detail::LinuxPerformanceCounters::calibrate<ankerl::nanobench::detail::PerformanceCounters::PerformanceCounters()::{lambda()#1}>(ankerl::nanobench::detail::PerformanceCounters::PerformanceCounters()::{lambda()#1}&&) [clone .isra.0]
+     0.06%  riscv-bench  riscv-bench           [.] CPU::execute_IL(InstructionField const&)
+     0.06%  riscv-bench  riscv-bench           [.] CPU::execute_S(InstructionField const&)
+     0.06%  riscv-bench  riscv-bench           [.] Memory::write32(unsigned int, unsigned int)
+     0.05%  riscv-bench  [kernel.kallsyms]     [k] mutex_lock
+     0.04%  riscv-bench  ld-linux-x86-64.so.2  [.] _dl_fixup
+     0.03%  riscv-bench  riscv-bench           [.] ankerl::nanobench::detail::performanceCounters()
+     0.03%  riscv-bench  libstdc++.so.6.0.35   [.] std::ios_base_library_init()
+     0.03%  riscv-bench  ld-linux-x86-64.so.2  [.] _dl_lookup_symbol_x
+     0.03%  riscv-bench  ld-linux-x86-64.so.2  [.] do_lookup_x
+     0.02%  riscv-bench  [kernel.kallsyms]     [k] set_pte_range
+     0.02%  taskset      libc.so.6             [.] strcat
+     0.02%  riscv-bench  [kernel.kallsyms]     [k] vma_interval_tree_insert
+     0.02%  riscv-bench  [kernel.kallsyms]     [k] step_into_slowpath
+     0.01%  taskset      ld-linux-x86-64.so.2  [.] _dl_cache_libcmp
+     0.01%  taskset      [kernel.kallsyms]     [k] delayed_uprobe_remove.part.0
+     0.01%  taskset      [kernel.kallsyms]     [k] barn_get_empty_sheaf
+     0.01%  taskset      [kernel.kallsyms]     [k] __filemap_add_folio
+     0.01%  taskset      [kernel.kallsyms]     [k] leftmatch_fb
+     0.01%  taskset      [kernel.kallsyms]     [k] rmqueue_bulk
+     0.01%  taskset      [kernel.kallsyms]     [k] xas_load
+     0.01%  taskset      [kernel.kallsyms]     [k] next_uptodate_folio
+# 
+```
+
+We can see a throughput increase to ~170 MIPS (+20). 
