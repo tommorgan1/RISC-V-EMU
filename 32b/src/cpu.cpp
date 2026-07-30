@@ -63,7 +63,6 @@ void CPU::step()
 	InstructionField field       = decode::decode(instruction);
 	execute(field);
 	++_instruction_count;
-	// return std::nullopt;
 }
 
 void CPU::run()
