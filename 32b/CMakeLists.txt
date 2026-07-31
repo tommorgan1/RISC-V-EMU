@@ -28,7 +28,7 @@ target_include_directories(riscv-emu-lib PUBLIC
 
 target_compile_features(riscv-emu-lib PUBLIC cxx_std_20) 
 # Commented out section below is intentional. No explicit optimisation for testing currently 
-#target_compile_options(riscv-emu-lib PRIVATE -O3 -march=native)
+target_compile_options(riscv-emu-lib PRIVATE -O3)
 #set_property(TARGET riscv-emu-lib PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 
